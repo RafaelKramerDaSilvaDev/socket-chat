@@ -1,23 +1,27 @@
-import Webcam from "js-webcam";
+import NodeWebcam from "node-webcam";
+
+// Configuração da webcam
+const webcam = NodeWebcam.create({
+  width: 1280,
+  height: 720,
+  quality: 100,
+  delay: 0, // Delay entre capturas
+  saveShots: false,
+  device: false,
+  output: "jpeg",
+});
 
 export function startVideoStream(client) {
-  const webcam = new Webcam(document.getElementById("webcam"), {
-    width: 640,
-    height: 480,
-    flip: false, // Não inverter horizontalmente
-  });
+  setInterval(() => {
+    // Captura a imagem da webcam
+    webcam.capture("frame", (err, data) => {
+      if (err) {
+        console.error(`[ERRO] Falha ao capturar imagem: ${err.message}`);
+        return;
+      }
 
-  webcam
-    .start()
-    .then(() => {
-      console.log("[VIDEO] Transmissão de vídeo iniciada.");
-
-      setInterval(() => {
-        const frame = webcam.capture(); // Captura o frame como base64
-        client.write(frame);
-      }, 1000 / 30); // Enviar 30 FPS
-    })
-    .catch((error) => {
-      console.error(`[ERRO] Falha ao iniciar a webcam: ${error.message}`);
+      console.log("[VIDEO] Frame capturado.");
+      client.write(data); // Envia o frame ao servidor ou cliente conectado
     });
+  }, 1000 / 30); // 30 FPS
 }
