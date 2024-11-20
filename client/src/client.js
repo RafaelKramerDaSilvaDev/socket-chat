@@ -1,7 +1,7 @@
-const { connectToServer } = require("./connection");
-const { startChat } = require("./chat_handler");
-const { handleCommand } = require("./command_handler");
-const { startVideoStream } = require("./video_stream");
+import { startChat } from "./chat_handler.js";
+import { handleCommand } from "./command_handler.js";
+import { connectToServer } from "./connection.js";
+import { startVideoStream } from "./video_stream.js";
 
 const client = connectToServer();
 

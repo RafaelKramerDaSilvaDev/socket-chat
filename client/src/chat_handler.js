@@ -1,6 +1,6 @@
-const readline = require("readline");
+import readline from "readline";
 
-function startChat(client) {
+export function startChat(client) {
   const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout,
@@ -15,5 +15,3 @@ function startChat(client) {
     }
   });
 }
-
-module.exports = { startChat };
