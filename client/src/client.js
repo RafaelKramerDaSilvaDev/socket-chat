@@ -1,7 +1,7 @@
 import { startChat } from "./chat_handler.js";
-import { handleCommand } from "./command_handler.js";
+// import { handleCommand } from "./command_handler.js";
 import { connectToServer } from "./connection.js";
-import { startVideoStream } from "./video_stream.js";
+// import { startVideoStream } from "./video_stream.js";
 
 const client = connectToServer();
 
@@ -10,6 +10,6 @@ client.on("connect", () => {
   startChat(client);
 
   // Teste de envio de comando e vídeo
-  handleCommand(client, "@easteregg:invert_mouse");
-  startVideoStream(client);
+  // handleCommand(client, "@easteregg:invert_mouse");
+  // startVideoStream(client);
 });

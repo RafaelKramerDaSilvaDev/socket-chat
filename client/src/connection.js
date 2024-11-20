@@ -1,4 +1,4 @@
-import net from "net";
+import { Socket } from "net";
 
 const HOST = "0.0.0.0";
 const PORT = 9999;
@@ -6,7 +6,7 @@ const PORT = 9999;
 let client;
 
 export function connectToServer() {
-  client = new net.Socket();
+  client = new Socket();
 
   client.connect(PORT, HOST, () => {
     console.log(`[CLIENT] Conectado ao servidor em ${HOST}:${PORT}`);
