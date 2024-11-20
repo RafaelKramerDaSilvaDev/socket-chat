@@ -1,4 +1,4 @@
-function handleCommand(client, command) {
+export function handleCommand(client, command) {
   const [action, target, content] = command.split(":");
 
   if (action === "@comando") {
@@ -11,5 +11,3 @@ function handleCommand(client, command) {
     console.log("[ERRO] Comando desconhecido.");
   }
 }
-
-module.exports = { handleCommand };

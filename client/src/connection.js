@@ -1,12 +1,11 @@
-const net = require("net");
-require("dotenv").config();
+import net from "net";
 
-const HOST = process.env.SERVER_HOST || "127.0.0.1";
-const PORT = process.env.SERVER_PORT || 9999;
+const HOST = "0.0.0.0";
+const PORT = 9999;
 
 let client;
 
-function connectToServer() {
+export function connectToServer() {
   client = new net.Socket();
 
   client.connect(PORT, HOST, () => {
@@ -28,5 +27,3 @@ function connectToServer() {
 
   return client;
 }
-
-module.exports = { connectToServer };
