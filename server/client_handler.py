@@ -49,6 +49,7 @@ def handle_client(client_socket, client_address):
             client_socket.send("Autenticação falhou.".encode())
             client_socket.close()
             return
+        
 
         usernames[client_socket] = username
         clients.append(client_socket)

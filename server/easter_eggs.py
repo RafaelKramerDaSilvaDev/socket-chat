@@ -65,7 +65,6 @@ def limit_mouse_area():
         print("Movimento interrompido pelo usuário.")
         
 
-
 def turn_off_monitor():
     try:
         ctypes.windll.user32.SendMessageW(0xFFFF, 0x0112, 0xF170, 2)
