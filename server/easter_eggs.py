@@ -1,19 +1,14 @@
-import pyautogui
+import ctypes
 
 def invert_mouse():
-    x, y = pyautogui.position()
-    width, height = pyautogui.size()
-    pyautogui.moveTo(width - x, height - y)
+   print('Inverter Mouse (Não implementado).')
 
 def limit_mouse_area():
-    x, y = pyautogui.position()
-    if x > 500:
-        x = 500
-    if y > 500:
-        y = 500
-    pyautogui.moveTo(x, y)
+   print('Limitar Área do Mouse (Não implementado).')
 
 def turn_off_monitor():
-    import os
-    if os.name == 'nt':
-        os.system("powershell (Add-Type '[DllImport(\"user32.dll\")]^public static extern int SendMessage(int hWnd, int hMsg, int wParam, int lParam);' -Name a -Pas)::SendMessage(-1, 0x0112, 0xF170, 2)")
+    try:
+        ctypes.windll.user32.SendMessageW(0xFFFF, 0x0112, 0xF170, 2)
+        print("Monitor desligado com sucesso.")
+    except Exception as e:
+        print(f"Erro ao desligar o monitor: {e}")

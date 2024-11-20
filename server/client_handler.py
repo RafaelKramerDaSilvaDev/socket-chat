@@ -1,4 +1,3 @@
-import threading
 from gatekeeper import authenticate
 from utils import broadcast
 from easter_eggs import invert_mouse, limit_mouse_area, turn_off_monitor
