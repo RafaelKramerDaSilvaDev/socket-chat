@@ -1,7 +1,5 @@
 import ctypes
 import pyautogui
-import pynput
-from pynput.mouse import Controller, Listener
 import threading
 import time
 
