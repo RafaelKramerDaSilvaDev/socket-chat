@@ -2,12 +2,11 @@ from core.gatekeeper import authenticate
 
 from utils.broadcast import broadcast
 from utils.execute_remote_command import execute_remote_command
-from utils.file_send import file_send
+from utils.receive_file import receive_file
 
 from easter_eggs.invert_mouse import invert_mouse
 from easter_eggs.limit_mouse_area import limit_mouse_area
 from easter_eggs.turn_off_monitor import turn_off_monitor
-
 
 clients = []
 usernames = {}
@@ -40,6 +39,67 @@ def handle_command(msg, client_socket):
                 if username == target_username.strip():
                     execute_remote_command(content.strip())
                     break
+
+        elif command == "@sendfile":
+            try:
+                _, target_username, file_size, file_name = msg.split(":", 3)
+                file_size = int(file_size)
+
+                if "\\" in file_name or "/" in file_name:
+                    file_name = file_name.split("\\")[-1].split("/")[-1]
+
+                if target_username.strip() not in usernames.values():
+                    client_socket.send("Usuário não encontrado.\n".encode())
+                    return
+
+                # Encontrar o cliente destinatário
+                dest_client = None
+                for client, username in usernames.items():
+                    if username == target_username.strip():
+                        dest_client = client
+                        break
+
+                if dest_client:
+                    dest_client.send(
+                        f"RECEIVEFILE:{file_size}:{file_name}:{usernames[client_socket]}".encode()
+                    )
+
+                    # Transferir os dados do arquivo para o destinatário
+                    bytes_sent = 0
+                    while bytes_sent < file_size:
+                        chunk = client_socket.recv(min(file_size - bytes_sent, 4096))
+                        dest_client.send(chunk)  # Transfere os bytes diretamente
+                        bytes_sent += len(chunk)
+
+                    client_socket.send(f"Arquivo enviado para {target_username}.\n".encode())
+                else:
+                    client_socket.send("Não foi possível encontrar o destinatário.\n".encode())
+            except Exception as e:
+                print(f"[ERRO] Ocorreu um erro ao enviar o arquivo: {e}")
+                client_socket.send(f"Erro ao enviar arquivo: {e}\n".encode())
+
+
+        elif command.startswith("RECEIVEFILE"):
+            try:
+                _, file_size, file_name, sender_username = command.split(":", 3)
+                file_size = int(file_size)
+
+                client_socket.send(f"Recebendo arquivo '{file_name}' de {sender_username}...\n".encode())
+                
+                # Salvar o arquivo
+                with open(f"recebido_{file_name}", "wb") as file:
+                    bytes_received = 0
+                    while bytes_received < file_size:
+                        chunk = client_socket.recv(min(file_size - bytes_received, 4096))
+                        file.write(chunk)
+                        bytes_received += len(chunk)
+
+                client_socket.send(f"Arquivo '{file_name}' recebido com sucesso.\n".encode())
+            except Exception as e:
+                print(f"[ERRO] Ocorreu um erro ao receber o arquivo: {e}")
+                client_socket.send(f"Erro ao receber arquivo: {e}\n".encode())
+
+
     except ValueError:
         client_socket.send("Formato de comando inválido. Use @comando:target_username:content\n".encode())
 
@@ -108,8 +168,30 @@ def handle_client(client_socket, client_address):
                         handle_command(command_msg, client_socket)
                     else:
                         client_socket.send("Formato de comando inválido. Use @comando:target_username:content\n".encode())
+
             elif lobby_choice == "3":
-                file_send()
+                client_socket.send("Digite o nome do usuário destino: ".encode())
+                target_username = client_socket.recv(1024).decode().strip()
+
+                if target_username not in usernames.values():
+                    client_socket.send("Usuário não encontrado.\n".encode())
+                    continue
+
+                client_socket.send("Digite o tamanho do arquivo (em bytes): ".encode())
+                try:
+                    file_size = int(client_socket.recv(1024).decode().strip())
+                except ValueError:
+                    client_socket.send("Tamanho do arquivo inválido.\n".encode())
+                    continue
+
+                client_socket.send("Digite o nome do arquivo (incluindo a extensão): ".encode())
+                file_name = client_socket.recv(1024).decode().strip()
+
+                client_socket.send(f"Preparando para enviar o arquivo '{file_name}'...\n".encode())
+                handle_command(
+                    f"@sendfile:{target_username}:{file_size}:{file_name}", client_socket
+                )
+
             elif lobby_choice == "exit":
                 client_socket.send("Você saiu do servidor.\n".encode())
                 break
@@ -129,4 +211,3 @@ def handle_client(client_socket, client_address):
         if client_socket in chat_clients:
             chat_clients.remove(client_socket)
         client_socket.close()
-

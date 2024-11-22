@@ -13,7 +13,27 @@ export function connectToServer() {
   });
 
   client.on("data", (data) => {
-    console.log(data.toString());
+    const message = data.toString();
+    if (message.startsWith("RECEIVEFILE")) {
+      const [, fileSize, fileName, senderUsername] = message.split(":");
+
+      const fileStream = fs.createWriteStream(`recebido_${fileName}`);
+
+      console.log(`Recebendo arquivo '${fileName}' de ${senderUsername}...`);
+      let bytesReceived = 0;
+
+      client.on("data", (chunk) => {
+        bytesReceived += chunk.length;
+        fileStream.write(chunk); // Grava os bytes recebidos no arquivo
+
+        if (bytesReceived >= parseInt(fileSize)) {
+          console.log(`Arquivo '${fileName}' recebido com sucesso.`);
+          fileStream.end();
+        }
+      });
+    } else {
+      console.log(message);
+    }
   });
 
   client.on("close", () => {
