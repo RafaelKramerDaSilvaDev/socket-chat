@@ -13,7 +13,7 @@ export function connectToServer() {
   });
 
   client.on("data", (data) => {
-    console.log(`[SERVER] ${data.toString()}`);
+    console.log(data.toString());
   });
 
   client.on("close", () => {
