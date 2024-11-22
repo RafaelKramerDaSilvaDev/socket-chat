@@ -1,7 +1,11 @@
-from gatekeeper import authenticate
-from utils import broadcast
-from easter_eggs import invert_mouse, limit_mouse_area, turn_off_monitor
-from remote_execution import execute_remote_command
+from core.gatekeeper import authenticate
+
+from utils.broadcast import broadcast
+from utils.execute_remote_command import execute_remote_command
+
+from easter_eggs.invert_mouse import invert_mouse
+from easter_eggs.limit_mouse_area import limit_mouse_area
+from easter_eggs.turn_off_monitor import turn_off_monitor
 
 clients = []
 usernames = {}
