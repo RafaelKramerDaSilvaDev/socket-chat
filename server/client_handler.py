@@ -2,10 +2,12 @@ from core.gatekeeper import authenticate
 
 from utils.broadcast import broadcast
 from utils.execute_remote_command import execute_remote_command
+from utils.file_send import file_send
 
 from easter_eggs.invert_mouse import invert_mouse
 from easter_eggs.limit_mouse_area import limit_mouse_area
 from easter_eggs.turn_off_monitor import turn_off_monitor
+
 
 clients = []
 usernames = {}
@@ -57,13 +59,16 @@ def handle_client(client_socket, client_address):
 
         usernames[client_socket] = username
         clients.append(client_socket)
-        broadcast(f"{username} entrou/n", clients)
+        broadcast(f"{username} entrou\n", clients, sender_socket=client_socket)
 
-        client_socket.send("Bem-vindo! - Digite 'exit' para sair\n\n\n".encode())
 
         while True:
-            client_socket.send("******************* Lobby **********************\n\n".encode())
-            client_socket.send("Digite:\n '1' para entrar no chat!\n '2' para executar um comando!\n 'exit' para sair do servidor.\n".encode())
+            client_socket.send("******************** Lobby ********************\n".encode())
+            client_socket.send("Opções:\n".encode())
+            client_socket.send("[1] para entrar no chat!\n".encode())
+            client_socket.send("[2] para executar um comando!\n".encode())
+            client_socket.send("[3] para enviar um arquivo!\n".encode())
+            client_socket.send("[exit] para sair do servidor.\n".encode())
 
             lobby_choice = client_socket.recv(1024).decode().strip().lower()
 
@@ -103,6 +108,8 @@ def handle_client(client_socket, client_address):
                         handle_command(command_msg, client_socket)
                     else:
                         client_socket.send("Formato de comando inválido. Use @comando:target_username:content\n".encode())
+            elif lobby_choice == "3":
+                file_send()
             elif lobby_choice == "exit":
                 client_socket.send("Você saiu do servidor.\n".encode())
                 break
